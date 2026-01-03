@@ -1,7 +1,8 @@
 import axios from "axios"
 import { useEffect, useState } from "react"
-const API_BASE = "https://ec-course-api.hexschool.io/v2"
-const API_PATH = "freshfarm"
+const API_BASE = import.meta.env.VITE_API_BASE_URL
+const API_PATH = import.meta.env.VITE_API_PATH
+
 const App = () => {
   const [formData, setFormData] = useState({
     username: "",
@@ -19,7 +20,6 @@ const App = () => {
       .find(row => row.startsWith("hexToken="))
       ?.split("=")[1]
     if (!token) {
-      console.log("找不到 Token，引導至登入頁")
       setIsLoading(false)
       return
     }
