@@ -26,6 +26,7 @@ const App = () => {
   const [isAuth, setIsAuth] = useState(false)
   const [products, setProducts] = useState([])
   const [tempProduct, setTempProduct] = useState(null)
+  const [originalTempProduct, setOriginalTempProduct] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [modalData, setModalData] = useState(defaultModalState)
 
@@ -183,6 +184,11 @@ const App = () => {
     }))
   }
   const handleEditProduct = async id => {
+    if (JSON.stringify(tempProduct) === JSON.stringify(originalTempProduct)) {
+      alert("沒有任何變更，無需更新產品。")
+      return
+    }
+
     try {
       await editProduct(id)
       alert("編輯產品成功")
@@ -260,7 +266,10 @@ const App = () => {
                         <td>
                           <button
                             className='btn btn-primary'
-                            onClick={() => setTempProduct(product)}
+                            onClick={() => {
+                              setTempProduct(product)
+                              setOriginalTempProduct(product)
+                            }}
                           >
                             查看細節
                           </button>
@@ -425,7 +434,7 @@ const App = () => {
                           id='imagesUrl'
                           name='imagesUrl'
                           rows='10'
-                          value={tempProduct.imagesUrl}
+                          value={tempProduct.imagesUrl.join("\n")}
                           onChange={e => {
                             const { value } = e.target
                             setTempProduct(prev => ({
