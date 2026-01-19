@@ -1,8 +1,14 @@
-import axios from "axios"
 import { useEffect, useState } from "react"
 import ProductModal from "./ProductModal"
-const API_BASE = import.meta.env.VITE_API_BASE_URL
-const API_PATH = import.meta.env.VITE_API_PATH
+import {
+  checkSignin as apiCheckSignin,
+  signin as apiSignin,
+  signout as apiSignout,
+  fetchProducts as apiFetchProducts,
+  addProduct as apiAddProduct,
+  deleteProduct as apiDeleteProduct,
+  editProduct as apiEditProduct,
+} from "./api"
 
 const defaultModalState = {
   imageUrl: "",
@@ -29,8 +35,10 @@ const App = () => {
   const [originalTempProduct, setOriginalTempProduct] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [modalData, setModalData] = useState(defaultModalState)
+  const [isFetchingProducts, setIsFetchingProducts] = useState(false)
 
   const [isEditing, setIsEditing] = useState(false)
+  const [isSavingProduct, setIsSavingProduct] = useState(false)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const openModal = () => {
@@ -48,9 +56,8 @@ const App = () => {
       setIsLoading(false)
       return
     }
-    axios.defaults.headers.common["Authorization"] = token
     try {
-      await axios.post(`${API_BASE}/api/user/check`)
+      await apiCheckSignin()
       console.log("驗證成功")
       setIsAuth(true)
     } catch (error) {
@@ -72,12 +79,7 @@ const App = () => {
 
   const signin = async () => {
     try {
-      const response = await axios.post(`${API_BASE}/admin/signin`, formData)
-      const { token, expired } = response.data
-      document.cookie = `hexToken=${token}; expires=${new Date(
-        expired,
-      )}; path=/`
-      axios.defaults.headers.common["Authorization"] = token
+      await apiSignin(formData)
       setIsAuth(true)
       alert("登入成功")
     } catch (error) {
@@ -86,28 +88,24 @@ const App = () => {
   }
   const signout = async () => {
     try {
-      const response = await axios.post(`${API_BASE}/logout`)
-      if (response.data.success) {
-        document.cookie =
-          "hexToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
-        delete axios.defaults.headers.common["Authorization"]
-        setIsAuth(false)
-        alert("您已成功登出")
-      }
+      await apiSignout()
+      setIsAuth(false)
+      alert("您已成功登出")
     } catch (error) {
       console.log("登出錯誤", error)
     }
   }
   //api
   const fetchProducts = async () => {
+    setIsFetchingProducts(true)
     try {
-      const url = `${API_BASE}/api/${API_PATH}/admin/products`
-      const response = await axios.get(url)
-      const { products: data } = response.data
+      const data = await apiFetchProducts()
       setProducts(data)
       console.log(data)
     } catch (error) {
       console.error("商品取得錯誤", error)
+    } finally {
+      setIsFetchingProducts(false)
     }
   }
   const addProduct = async rawData => {
@@ -117,26 +115,13 @@ const App = () => {
       price: Number(rawData.price),
       imagesUrl: rawData.imagesUrl.filter(url => url.trim() !== ""),
     }
-    const response = await axios.post(
-      `${API_BASE}/api/${API_PATH}/admin/product`,
-      {
-        data: productToSend,
-      },
-    )
-    return response.data
+    return await apiAddProduct(productToSend)
   }
   const deleteProduct = async id => {
-    const response = await axios.delete(
-      `${API_BASE}/api/${API_PATH}/admin/product/${id}`,
-    )
-    return response.data
+    return await apiDeleteProduct(id)
   }
   const editProduct = async id => {
-    const response = await axios.put(
-      `${API_BASE}/api/${API_PATH}/admin/product/${id}`,
-      { data: tempProduct },
-    )
-    return response.data
+    return await apiEditProduct(id, tempProduct)
   }
 
   //event
@@ -189,6 +174,8 @@ const App = () => {
       return
     }
 
+    setIsSavingProduct(true) // 開始編輯時設為 true
+
     try {
       await editProduct(id)
       alert("編輯產品成功")
@@ -196,6 +183,9 @@ const App = () => {
     } catch (error) {
       console.error(error.response?.data || error.message)
       alert("編輯產品失敗")
+    } finally {
+      setIsEditing(false)
+      setIsSavingProduct(false)
     }
   }
 
@@ -256,7 +246,19 @@ const App = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {products && products.length > 0 ? (
+                  {isFetchingProducts ? (
+                    <tr>
+                      <td colSpan='6' className='text-center py-4'>
+                        <div
+                          className='spinner-border text-primary'
+                          role='status'
+                        >
+                          <span className='visually-hidden'>Loading...</span>
+                        </div>
+                        <p className='mt-2'>載入產品中...</p>
+                      </td>
+                    </tr>
+                  ) : products && products.length > 0 ? (
                     products.map(product => (
                       <tr key={product.id}>
                         <td>{product.title}</td>
@@ -278,9 +280,7 @@ const App = () => {
                           <button
                             type='button'
                             className='btn btn-danger'
-                            onClick={() => {
-                              handleDeleteProduct(product.id)
-                            }}
+                            onClick={() => handleDeleteProduct(product.id)}
                           >
                             刪除
                           </button>
@@ -330,6 +330,7 @@ const App = () => {
                       }
                       setIsEditing(prev => !prev)
                     }}
+                    disabled={isSavingProduct}
                   >
                     {isEditing ? "完成" : "編輯"}
                   </button>
@@ -428,7 +429,6 @@ const App = () => {
                         更多圖片網址 (每行一個)：
                       </label>
                       {isEditing ? (
-                        //多圖區 須修改
                         <textarea
                           className='form-control'
                           id='imagesUrl'
