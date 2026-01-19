@@ -1,15 +1,38 @@
 import { useEffect, useRef } from "react"
 import { Modal } from "bootstrap"
 
-const ProductModal = ({ isOpen, onClose }) => {
+const ProductModal = ({
+  isOpen,
+  onClose,
+  tempProduct,
+  handleInputChange,
+  handleImageChange,
+  submitFunction,
+}) => {
   const modalRef = useRef(null)
   const bsModal = useRef(null)
+
   useEffect(() => {
     bsModal.current = new Modal(modalRef.current)
-    modalRef.current.addEventListener("hidden.bs.modal", () => {
+
+    return () => {
+      if (bsModal.current) {
+        bsModal.current.dispose()
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    const handleHidden = () => {
       onClose()
-    })
+    }
+    const modalElement = modalRef.current
+    modalElement.addEventListener("hidden.bs.modal", handleHidden)
+    return () => {
+      modalElement.removeEventListener("hidden.bs.modal", handleHidden)
+    }
   }, [onClose])
+
   useEffect(() => {
     if (isOpen) {
       bsModal.current.show()
@@ -21,7 +44,6 @@ const ProductModal = ({ isOpen, onClose }) => {
   return (
     <div className='modal fade' tabIndex='-1' ref={modalRef}>
       <div className='modal-dialog modal-lg modal-dialog-centered'>
-        {/* modal-lg 讓 Modal 更寬, modal-dialog-centered 讓 Modal 垂直置中 */}
         <div className='modal-content'>
           <div className='modal-header'>
             <h5 className='modal-title' id='addProductModalLabel'>
@@ -46,9 +68,9 @@ const ProductModal = ({ isOpen, onClose }) => {
                       type='text'
                       className='form-control'
                       id='title'
-                      name='title' // 移除 value 和 onChange
-                      // value={newProductData.title}
-                      // onChange={handleNewProductInputChange}
+                      name='title'
+                      value={tempProduct.title}
+                      onChange={handleInputChange}
                       required
                     />
                   </div>
@@ -61,9 +83,9 @@ const ProductModal = ({ isOpen, onClose }) => {
                         type='text'
                         className='form-control'
                         id='category'
-                        name='category' // 移除 value 和 onChange
-                        // value={newProductData.category}
-                        // onChange={handleNewProductInputChange}
+                        name='category'
+                        value={tempProduct.category}
+                        onChange={handleInputChange}
                         required
                       />
                     </div>
@@ -75,8 +97,9 @@ const ProductModal = ({ isOpen, onClose }) => {
                         type='text'
                         className='form-control'
                         id='unit'
-                        name='unit' // 移除 value 和 onChange
-                        // value={newProductData.unit}
+                        name='unit'
+                        value={tempProduct.unit}
+                        onChange={handleInputChange}
                         required
                       />
                     </div>
@@ -90,8 +113,9 @@ const ProductModal = ({ isOpen, onClose }) => {
                         type='number'
                         className='form-control'
                         id='origin_price'
-                        name='origin_price' // 移除 value 和 onChange
-                        // value={newProductData.origin_price}
+                        name='origin_price'
+                        value={tempProduct.origin_price}
+                        onChange={handleInputChange}
                         required
                       />
                     </div>
@@ -103,8 +127,9 @@ const ProductModal = ({ isOpen, onClose }) => {
                         type='number'
                         className='form-control'
                         id='price'
-                        name='price' // 移除 value 和 onChange
-                        // value={newProductData.price}
+                        name='price'
+                        value={tempProduct.price}
+                        onChange={handleInputChange}
                         required
                       />
                     </div>
@@ -119,9 +144,9 @@ const ProductModal = ({ isOpen, onClose }) => {
                       className='form-control'
                       id='description'
                       name='description'
-                      rows='3' // 移除 value 和 onChange
-                      // value={newProductData.description}
-                      // onChange={handleNewProductInputChange}
+                      rows='3'
+                      value={tempProduct.description}
+                      onChange={handleInputChange}
                     ></textarea>
                   </div>
                   <div className='mb-3'>
@@ -132,9 +157,9 @@ const ProductModal = ({ isOpen, onClose }) => {
                       className='form-control'
                       id='content'
                       name='content'
-                      rows='3' // 移除 value 和 onChange
-                      // value={newProductData.content}
-                      // onChange={handleNewProductInputChange}
+                      rows='3'
+                      value={tempProduct.content}
+                      onChange={handleInputChange}
                     ></textarea>
                   </div>
                   <div className='mb-3'>
@@ -143,9 +168,9 @@ const ProductModal = ({ isOpen, onClose }) => {
                         className='form-check-input'
                         type='checkbox'
                         id='is_enabled'
-                        name='is_enabled' // 移除 checked 和 onChange
-                        // checked={newProductData.is_enabled}
-                        // onChange={handleNewProductInputChange}
+                        name='is_enabled'
+                        checked={tempProduct.is_enabled}
+                        onChange={handleInputChange}
                       />
                       <label className='form-check-label' htmlFor='is_enabled'>
                         是否啟用
@@ -162,9 +187,9 @@ const ProductModal = ({ isOpen, onClose }) => {
                       type='text'
                       className='form-control'
                       id='imageUrl'
-                      name='imageUrl' // 移除 value 和 onChange
-                      // value={newProductData.imageUrl}
-                      // onChange={handleNewProductInputChange}
+                      name='imageUrl'
+                      value={tempProduct.imageUrl}
+                      onChange={handleInputChange}
                     />
                     {/* 移除圖片預覽 */}
                   </div>
@@ -176,9 +201,9 @@ const ProductModal = ({ isOpen, onClose }) => {
                       className='form-control'
                       id='imagesUrl'
                       name='imagesUrl'
-                      rows='3' // 移除 value 和 onChange
-                      // value={newProductData.imagesUrl.join('\n')}
-                      // onChange={(e) => setNewProductData(prev => ({ ...prev, imagesUrl: e.target.value.split('\n').filter(url => url.trim() !== ''), }))}
+                      rows='3'
+                      value={tempProduct.imagesUrl.join("\n")}
+                      onChange={handleImageChange}
                     ></textarea>
                     {/* 移除多圖預覽 */}
                   </div>
@@ -197,7 +222,7 @@ const ProductModal = ({ isOpen, onClose }) => {
             <button
               type='button'
               className='btn btn-primary'
-              // onClick={addProduct}
+              onClick={submitFunction}
             >
               確認新增
             </button>
