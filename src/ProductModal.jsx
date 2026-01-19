@@ -8,6 +8,7 @@ const ProductModal = ({
   handleInputChange,
   handleImageChange,
   submitFunction,
+  modalType,
 }) => {
   const modalRef = useRef(null)
   const bsModal = useRef(null)
@@ -202,7 +203,7 @@ const ProductModal = ({
                       id='imagesUrl'
                       name='imagesUrl'
                       rows='3'
-                      value={tempProduct.imagesUrl.join("\n")}
+                      value={(tempProduct.imagesUrl || []).join("\n")}
                       onChange={handleImageChange}
                     ></textarea>
                     {/* 移除多圖預覽 */}
@@ -224,7 +225,7 @@ const ProductModal = ({
               className='btn btn-primary'
               onClick={submitFunction}
             >
-              確認新增
+              {modalType === "create" ? "新增" : "編輯"}
             </button>
           </div>
         </div>

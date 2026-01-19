@@ -10,7 +10,7 @@ import {
   editProduct as apiEditProduct,
 } from "./api"
 
-const defaultModalState = {
+const defaultData = {
   imageUrl: "",
   title: "",
   category: "",
@@ -31,18 +31,26 @@ const App = () => {
 
   const [isAuth, setIsAuth] = useState(false)
   const [products, setProducts] = useState([])
-  const [tempProduct, setTempProduct] = useState(null)
+  const [tempProduct, setTempProduct] = useState(defaultData)
   const [originalTempProduct, setOriginalTempProduct] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [modalData, setModalData] = useState(defaultModalState)
+  // const [modalData, setModalData] = useState(defaultModalState)
+  const [modalType, setModalType] = useState("create")
   const [isFetchingProducts, setIsFetchingProducts] = useState(false)
 
   const [isEditing, setIsEditing] = useState(false)
   const [isSavingProduct, setIsSavingProduct] = useState(false)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const openModal = () => {
-    setModalData(defaultModalState)
+
+  const openModal = (type, product) => {
+    setModalType(type)
+    if (type === "create") {
+      setTempProduct(defaultData)
+    } else if (type === "edit") {
+      setTempProduct(product)
+    }
+
     setIsModalOpen(true)
   }
   const closeModal = () => setIsModalOpen(false)
@@ -147,7 +155,7 @@ const App = () => {
 
   const handleModalInputChange = e => {
     const { name, value, type, checked } = e.target
-    setModalData(prev => ({
+    setTempProduct(prev => ({
       ...prev,
       [name]: formatInputValue(value, type, checked),
     }))
@@ -155,50 +163,26 @@ const App = () => {
 
   const handleImageChange = e => {
     const { value } = e.target
-    setModalData(prev => ({
+    setTempProduct(prev => ({
       ...prev,
       imagesUrl: value.split("\n"),
     }))
   }
 
-  const handleEditInputChange = e => {
-    const { name, value, type, checked } = e.target
-    setTempProduct(prev => ({
-      ...prev,
-      [name]: formatInputValue(value, type, checked),
-    }))
-  }
-  const handleEditProduct = async id => {
-    if (JSON.stringify(tempProduct) === JSON.stringify(originalTempProduct)) {
-      alert("沒有任何變更，無需更新產品。")
-      return
-    }
-
-    setIsSavingProduct(true) // 開始編輯時設為 true
-
+  const handleModalSubmit = async () => {
     try {
-      await editProduct(id)
-      alert("編輯產品成功")
+      if (modalType === "create") {
+        await addProduct(tempProduct)
+        alert("新增產品成功")
+      } else if (modalType === "edit") {
+        await editProduct(tempProduct.id, tempProduct)
+        alert("編輯產品成功")
+      }
       fetchProducts()
-    } catch (error) {
-      console.error(error.response?.data || error.message)
-      alert("編輯產品失敗")
-    } finally {
-      setIsEditing(false)
-      setIsSavingProduct(false)
-    }
-  }
-
-  const handleAddProduct = async () => {
-    try {
-      await addProduct(modalData)
-      alert("新增產品成功")
-      fetchProducts()
-    } catch (error) {
-      console.error(error.response?.data || error.message)
-      alert("新增產品失敗")
-    } finally {
       closeModal()
+    } catch (error) {
+      console.error(error.response?.data || error.message)
+      alert("操作失敗")
     }
   }
 
@@ -230,7 +214,7 @@ const App = () => {
               <button
                 type='button'
                 className='btn btn-warning'
-                onClick={openModal}
+                onClick={() => openModal("create")}
               >
                 新增產品
               </button>
@@ -297,7 +281,7 @@ const App = () => {
             </div>
             <div className='col-md-6'>
               <h2 className='text-center'>單一產品細節</h2>
-              {tempProduct ? (
+              {tempProduct !== defaultData ? (
                 <div className='card mb-3 p-4 position-relative'>
                   {isEditing ? (
                     <div className='mb-3'>
@@ -310,7 +294,7 @@ const App = () => {
                         id='imageUrl'
                         name='imageUrl'
                         value={tempProduct.imageUrl}
-                        onChange={handleEditInputChange}
+                        // onChange={handleEditInputChange}
                       />
                     </div>
                   ) : (
@@ -324,12 +308,7 @@ const App = () => {
                   <button
                     type='button'
                     className={`position-absolute top-0 end-0 btn  ${isEditing ? "btn-success" : "btn-primary"}`}
-                    onClick={() => {
-                      if (isEditing) {
-                        handleEditProduct(tempProduct.id)
-                      }
-                      setIsEditing(prev => !prev)
-                    }}
+                    onClick={() => openModal("edit", tempProduct)}
                     disabled={isSavingProduct}
                   >
                     {isEditing ? "完成" : "編輯"}
@@ -342,7 +321,7 @@ const App = () => {
                           className='form-control'
                           name='title'
                           value={tempProduct.title}
-                          onChange={handleEditInputChange}
+                          // onChange={handleEditInputChange}
                         />
                       ) : (
                         tempProduct.title
@@ -360,7 +339,7 @@ const App = () => {
                           name='description'
                           rows='3'
                           value={tempProduct.description}
-                          onChange={handleEditInputChange}
+                          // onChange={handleEditInputChange}
                         ></textarea>
                       ) : (
                         <p className='card-text'>{tempProduct.description}</p>
@@ -378,7 +357,7 @@ const App = () => {
                           name='content'
                           rows='3'
                           value={tempProduct.content}
-                          onChange={handleEditInputChange}
+                          // onChange={handleEditInputChange}
                         ></textarea>
                       ) : (
                         <p className='card-text'>{tempProduct.content}</p>
@@ -397,7 +376,7 @@ const App = () => {
                             id='origin_price'
                             name='origin_price'
                             value={tempProduct.origin_price}
-                            onChange={handleEditInputChange}
+                            // onChange={handleEditInputChange}
                           />
                         ) : (
                           <p className='card-text text-secondary'>
@@ -416,7 +395,7 @@ const App = () => {
                             id='price'
                             name='price'
                             value={tempProduct.price}
-                            onChange={handleEditInputChange}
+                            // onChange={handleEditInputChange}
                           />
                         ) : (
                           <p className='card-text'>{tempProduct.price} 元</p>
@@ -466,7 +445,7 @@ const App = () => {
                             id='is_enabled'
                             name='is_enabled'
                             checked={tempProduct.is_enabled === 1}
-                            onChange={handleEditInputChange}
+                            // onChange={handleEditInputChange}
                           />
                         ) : (
                           <input
@@ -497,10 +476,10 @@ const App = () => {
           <ProductModal
             isOpen={isModalOpen}
             onClose={closeModal}
-            tempProduct={modalData}
+            tempProduct={tempProduct}
             handleInputChange={handleModalInputChange}
             handleImageChange={handleImageChange}
-            submitFunction={handleAddProduct}
+            submitFunction={handleModalSubmit}
           />
         </div>
       ) : (
