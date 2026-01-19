@@ -3,12 +3,10 @@ import axios from "axios"
 const API_BASE = import.meta.env.VITE_API_BASE_URL
 const API_PATH = import.meta.env.VITE_API_PATH
 
-// Create an Axios instance
 const api = axios.create({
   baseURL: API_BASE,
 })
 
-// Interceptor to set Authorization header from cookie
 api.interceptors.request.use(config => {
   const token = document.cookie
     .split("; ")
@@ -17,7 +15,6 @@ api.interceptors.request.use(config => {
   if (token) {
     config.headers.Authorization = token
   } else {
-    // If no token, ensure Authorization header is not sent
     delete config.headers.Authorization
   }
   return config
