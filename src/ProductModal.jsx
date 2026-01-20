@@ -189,7 +189,7 @@ const ProductModal = ({
                       className='form-control'
                       id='imageUrl'
                       name='imageUrl'
-                      value={tempProduct.imageUrl}
+                      value={tempProduct.imageUrl || []}
                       onChange={handleInputChange}
                     />
                     {/* 移除圖片預覽 */}

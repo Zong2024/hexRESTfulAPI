@@ -41,7 +41,7 @@ export const signout = async () => {
   return response.data
 }
 
-export const fetchProducts = async () => {
+export const getProducts = async () => {
   const response = await api.get(`/api/${API_PATH}/admin/products`)
   return response.data.products
 }

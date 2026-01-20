@@ -4,7 +4,7 @@ import {
   checkSignin as apiCheckSignin,
   signin as apiSignin,
   signout as apiSignout,
-  fetchProducts as apiFetchProducts,
+  getProducts as getProducts,
   addProduct as apiAddProduct,
   deleteProduct as apiDeleteProduct,
   editProduct as apiEditProduct,
@@ -34,19 +34,15 @@ const App = () => {
   const [tempProduct, setTempProduct] = useState(defaultData)
   const [originalTempProduct, setOriginalTempProduct] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  // const [modalData, setModalData] = useState(defaultModalState)
   const [modalType, setModalType] = useState("create")
   const [isFetchingProducts, setIsFetchingProducts] = useState(false)
 
-  const [isEditing, setIsEditing] = useState(false)
-  const [isSavingProduct, setIsSavingProduct] = useState(false)
-
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const openModal = (type, product) => {
+  const openModal = (type, product = defaultData) => {
     setModalType(type)
     if (type === "create") {
-      setTempProduct(defaultData)
+      setTempProduct(product)
     } else if (type === "edit") {
       setTempProduct(product)
     }
@@ -107,7 +103,7 @@ const App = () => {
   const fetchProducts = async () => {
     setIsFetchingProducts(true)
     try {
-      const data = await apiFetchProducts()
+      const data = await getProducts()
       setProducts(data)
       console.log(data)
     } catch (error) {
@@ -133,13 +129,13 @@ const App = () => {
   }
 
   //event
-  const handleSubmit = async e => {
-    e.preventDefault()
-    await signin()
-  }
-  const handleInputChange = e => {
+  const handleSigninInputChange = e => {
     const { value, name } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+  const handleSigninSubmit = async e => {
+    e.preventDefault()
+    await signin()
   }
 
   const formatInputValue = (value, type, checked) => {
@@ -175,8 +171,13 @@ const App = () => {
         await addProduct(tempProduct)
         alert("新增產品成功")
       } else if (modalType === "edit") {
-        await editProduct(tempProduct.id, tempProduct)
-        alert("編輯產品成功")
+        if (
+          JSON.stringify(tempProduct) !== JSON.stringify(originalTempProduct)
+        ) {
+          await editProduct(tempProduct.id, tempProduct)
+          alert("編輯產品成功")
+        }
+        alert("資料無更新")
       }
       fetchProducts()
       closeModal()
@@ -281,125 +282,51 @@ const App = () => {
             </div>
             <div className='col-md-6'>
               <h2 className='text-center'>單一產品細節</h2>
-              {tempProduct !== defaultData ? (
+              {tempProduct.id ? (
                 <div className='card mb-3 p-4 position-relative'>
-                  {isEditing ? (
-                    <div className='mb-3'>
-                      <label htmlFor='imageUrl' className='form-label'>
-                        主要圖片網址
-                      </label>
-                      <input
-                        type='text'
-                        className='form-control'
-                        id='imageUrl'
-                        name='imageUrl'
-                        value={tempProduct.imageUrl}
-                        // onChange={handleEditInputChange}
-                      />
-                    </div>
-                  ) : (
-                    <img
-                      src={tempProduct.imageUrl}
-                      className='card-img-top primary-image'
-                      alt='主圖'
-                    />
-                  )}
+                  <img
+                    src={tempProduct.imageUrl || []}
+                    className='card-img-top primary-image'
+                    alt='主圖'
+                  />
 
                   <button
                     type='button'
-                    className={`position-absolute top-0 end-0 btn  ${isEditing ? "btn-success" : "btn-primary"}`}
+                    className='position-absolute top-0 end-0 btn btn-primary '
                     onClick={() => openModal("edit", tempProduct)}
-                    disabled={isSavingProduct}
                   >
-                    {isEditing ? "完成" : "編輯"}
+                    edit
                   </button>
                   <div className='card-body'>
-                    <h5 className='card-title'>
-                      {isEditing ? (
-                        <input
-                          type='text'
-                          className='form-control'
-                          name='title'
-                          value={tempProduct.title}
-                          // onChange={handleEditInputChange}
-                        />
-                      ) : (
-                        tempProduct.title
-                      )}
-                    </h5>
+                    <h5 className='card-title'>{tempProduct.title}</h5>
 
                     <div className='mb-3'>
                       <label htmlFor='description' className='form-label'>
                         商品描述：
                       </label>
-                      {isEditing ? (
-                        <textarea
-                          className='form-control'
-                          id='description'
-                          name='description'
-                          rows='3'
-                          value={tempProduct.description}
-                          // onChange={handleEditInputChange}
-                        ></textarea>
-                      ) : (
-                        <p className='card-text'>{tempProduct.description}</p>
-                      )}
-                    </div>
 
+                      <p className='card-text'>{tempProduct.description}</p>
+                    </div>
                     <div className='mb-3'>
                       <label htmlFor='content' className='form-label'>
                         商品內容：
                       </label>
-                      {isEditing ? (
-                        <textarea
-                          className='form-control'
-                          id='content'
-                          name='content'
-                          rows='3'
-                          value={tempProduct.content}
-                          // onChange={handleEditInputChange}
-                        ></textarea>
-                      ) : (
-                        <p className='card-text'>{tempProduct.content}</p>
-                      )}
+                      <p className='card-text'>{tempProduct.content}</p>
                     </div>
-
                     <div className='row mb-3'>
                       <div className='col-md-6'>
                         <label htmlFor='origin_price' className='form-label'>
                           原價：
                         </label>
-                        {isEditing ? (
-                          <input
-                            type='number'
-                            className='form-control'
-                            id='origin_price'
-                            name='origin_price'
-                            value={tempProduct.origin_price}
-                            // onChange={handleEditInputChange}
-                          />
-                        ) : (
-                          <p className='card-text text-secondary'>
-                            <del>{tempProduct.origin_price}</del> 元
-                          </p>
-                        )}
+                        <p className='card-text text-secondary'>
+                          <del>{tempProduct.origin_price}</del> 元
+                        </p>
                       </div>
                       <div className='col-md-6'>
                         <label htmlFor='price' className='form-label'>
                           售價：
                         </label>
-                        {isEditing ? (
-                          <input
-                            type='number'
-                            className='form-control'
-                            id='price'
-                            name='price'
-                            value={tempProduct.price}
-                            // onChange={handleEditInputChange}
-                          />
-                        ) : (
-                          <p className='card-text'>{tempProduct.price} 元</p>
-                        )}
+                        <p className='card-text'>{tempProduct.price} 元</p>
                       </div>
                     </div>
 
@@ -407,56 +334,28 @@ const App = () => {
                       <label htmlFor='imagesUrl' className='form-label'>
                         更多圖片網址 (每行一個)：
                       </label>
-                      {isEditing ? (
-                        <textarea
-                          className='form-control'
-                          id='imagesUrl'
-                          name='imagesUrl'
-                          rows='10'
-                          value={tempProduct.imagesUrl.join("\n")}
-                          onChange={e => {
-                            const { value } = e.target
-                            setTempProduct(prev => ({
-                              ...prev,
-                              imagesUrl: value.split("\n"),
-                            }))
-                          }}
-                        ></textarea>
-                      ) : (
-                        <div className='d-flex flex-wrap'>
-                          {tempProduct.imagesUrl?.map((url, index) => (
-                            <img
-                              key={index}
-                              src={url}
-                              className='images'
-                              alt='副圖'
-                            />
-                          ))}
-                        </div>
-                      )}
+                      <div className='d-flex flex-wrap'>
+                        {tempProduct.imagesUrl?.map((url, index) => (
+                          <img
+                            key={index}
+                            src={url}
+                            className='images'
+                            alt='副圖'
+                          />
+                        ))}
+                      </div>
                     </div>
 
                     <div className='mb-3'>
                       <div className='form-check'>
-                        {isEditing ? (
-                          <input
-                            className='form-check-input'
-                            type='checkbox'
-                            id='is_enabled'
-                            name='is_enabled'
-                            checked={tempProduct.is_enabled === 1}
-                            // onChange={handleEditInputChange}
-                          />
-                        ) : (
-                          <input
-                            className='form-check-input'
-                            type='checkbox'
-                            id='is_enabled'
-                            name='is_enabled'
-                            checked={tempProduct.is_enabled === 1}
-                            disabled
-                          />
-                        )}
+                        <input
+                          className='form-check-input'
+                          type='checkbox'
+                          id='is_enabled'
+                          name='is_enabled'
+                          checked={tempProduct.is_enabled === 1}
+                          disabled
+                        />
                         <label
                           className='form-check-label'
                           htmlFor='is_enabled'
@@ -487,7 +386,11 @@ const App = () => {
           <div className='row justify-content-center'>
             <h1 className='h3 mb-3 font-weight-normal'>請先登入</h1>
             <div className='col-8'>
-              <form id='form' className='form-signin' onSubmit={handleSubmit}>
+              <form
+                id='form'
+                className='form-signin'
+                onSubmit={handleSigninSubmit}
+              >
                 <div className='form-floating mb-3'>
                   <input
                     type='email'
@@ -496,7 +399,7 @@ const App = () => {
                     name='username'
                     placeholder='name@example.com'
                     value={formData.username}
-                    onChange={handleInputChange}
+                    onChange={handleSigninInputChange}
                     required
                     autoFocus
                   />
@@ -510,7 +413,7 @@ const App = () => {
                     name='password'
                     placeholder='Password'
                     value={formData.password}
-                    onChange={handleInputChange}
+                    onChange={handleSigninInputChange}
                     required
                   />
                   <label htmlFor='password'>Password</label>
