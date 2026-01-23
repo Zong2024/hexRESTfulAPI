@@ -21,17 +21,26 @@ const defaultData = {
   content: "",
   is_enabled: 0,
   imagesUrl: [],
+  // --- 規格區 ---
+  origin: "",
+  farm: "",
+  weight: "",
+  origin_info: "",
+  // --- 保存與食用區 ---
+  storage_method: "",
+  shelf_life: "",
+  eating_tips: "",
 }
 
 const App = () => {
   const [formData, setFormData] = useState({
-    username: "love970120@gmail.com",
+    username: "",
     password: "",
   })
 
   const [isAuth, setIsAuth] = useState(false)
   const [products, setProducts] = useState([])
-  const [tempProduct, setTempProduct] = useState(defaultData)
+  const [tempProduct, setTempProduct] = useState()
   const [originalTempProduct, setOriginalTempProduct] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [modalType, setModalType] = useState("create")
@@ -112,20 +121,14 @@ const App = () => {
       setIsFetchingProducts(false)
     }
   }
-  const addProduct = async rawData => {
-    const productToSend = {
-      ...rawData,
-      origin_price: Number(rawData.origin_price),
-      price: Number(rawData.price),
-      imagesUrl: rawData.imagesUrl.filter(url => url.trim() !== ""),
-    }
-    return await apiAddProduct(productToSend)
+  const addProduct = async product => {
+    return await apiAddProduct(product)
   }
   const deleteProduct = async id => {
     return await apiDeleteProduct(id)
   }
-  const editProduct = async id => {
-    return await apiEditProduct(id, tempProduct)
+  const editProduct = async (id, productData) => {
+    return await apiEditProduct(id, productData)
   }
 
   //event
@@ -166,18 +169,36 @@ const App = () => {
   }
 
   const handleModalSubmit = async () => {
+    console.log("modalType:", modalType)
+    const detailedInfo = {
+      origin: tempProduct.origin || "",
+      farm: tempProduct.farm || "",
+      origin_info: tempProduct.origin_info || "",
+      weight: tempProduct.weight || "",
+      storage_method: tempProduct.storage_method || "",
+      shelf_life: tempProduct.shelf_life || "",
+      eating_tips: tempProduct.eating_tips || "",
+    }
+    const productToSend = {
+      ...tempProduct,
+      content: JSON.stringify(detailedInfo),
+      origin_price: Number(tempProduct.origin_price),
+      price: Number(tempProduct.price),
+      imagesUrl: tempProduct.imagesUrl.filter(url => url.trim() !== ""),
+    }
     try {
       if (modalType === "create") {
-        await addProduct(tempProduct)
+        await addProduct(productToSend)
         alert("新增產品成功")
       } else if (modalType === "edit") {
         if (
           JSON.stringify(tempProduct) !== JSON.stringify(originalTempProduct)
         ) {
-          await editProduct(tempProduct.id, tempProduct)
+          await editProduct(tempProduct.id, productToSend)
           alert("編輯產品成功")
+        } else {
+          alert("資料無更新")
         }
-        alert("資料無更新")
       }
       fetchProducts()
       closeModal()
@@ -195,6 +216,8 @@ const App = () => {
     } catch (error) {
       console.error(error.response?.data || error.message)
       alert("刪除產品失敗")
+    } finally {
+      setTempProduct()
     }
   }
 
@@ -285,7 +308,7 @@ const App = () => {
               {tempProduct.id ? (
                 <div className='card mb-3 p-4 position-relative'>
                   <img
-                    src={tempProduct.imageUrl || []}
+                    src={tempProduct.imageUrl || null}
                     className='card-img-top primary-image'
                     alt='主圖'
                   />
@@ -301,37 +324,28 @@ const App = () => {
                     <h5 className='card-title'>{tempProduct.title}</h5>
 
                     <div className='mb-3'>
-                      <label htmlFor='description' className='form-label'>
-                        商品描述：
-                      </label>
-
+                      <label className='form-label'>商品描述：</label>
                       <p className='card-text'>{tempProduct.description}</p>
                     </div>
                     <div className='mb-3'>
-                      <label htmlFor='content' className='form-label'>
-                        商品內容：
-                      </label>
-                      <p className='card-text'>{tempProduct.content}</p>
+                      <label className='form-label'>產地資訊：</label>
+                      <p className='card-text'>{tempProduct.origin_info}</p>
                     </div>
                     <div className='row mb-3'>
                       <div className='col-md-6'>
-                        <label htmlFor='origin_price' className='form-label'>
-                          原價：
-                        </label>
+                        <label className='form-label'>原價：</label>
                         <p className='card-text text-secondary'>
                           <del>{tempProduct.origin_price}</del> 元
                         </p>
                       </div>
                       <div className='col-md-6'>
-                        <label htmlFor='price' className='form-label'>
-                          售價：
-                        </label>
+                        <label className='form-label'>售價：</label>
                         <p className='card-text'>{tempProduct.price} 元</p>
                       </div>
                     </div>
 
                     <div className='mb-3'>
-                      <label htmlFor='imagesUrl' className='form-label'>
+                      <label className='form-label'>
                         更多圖片網址 (每行一個)：
                       </label>
                       <div className='d-flex flex-wrap'>
@@ -351,17 +365,10 @@ const App = () => {
                         <input
                           className='form-check-input'
                           type='checkbox'
-                          id='is_enabled'
-                          name='is_enabled'
                           checked={tempProduct.is_enabled === 1}
                           disabled
                         />
-                        <label
-                          className='form-check-label'
-                          htmlFor='is_enabled'
-                        >
-                          是否啟用
-                        </label>
+                        <label className='form-check-label'>是否啟用</label>
                       </div>
                     </div>
                   </div>

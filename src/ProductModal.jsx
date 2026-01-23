@@ -60,7 +60,7 @@ const ProductModal = ({
           <div className='modal-body'>
             <form>
               <div className='row'>
-                <div className='col-md-8'>
+                <div className='col-md-6'>
                   <div className='mb-3'>
                     <label htmlFor='title' className='form-label'>
                       產品名稱
@@ -77,6 +77,35 @@ const ProductModal = ({
                   </div>
                   <div className='row'>
                     <div className='mb-3 col-md-6'>
+                      <label htmlFor='origin' className='form-label'>
+                        產地
+                      </label>
+                      <input
+                        type='text'
+                        className='form-control'
+                        id='origin'
+                        name='origin'
+                        value={tempProduct.origin || []}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                    <div className='mb-3 col-md-6'>
+                      <label htmlFor='farm' className='form-label'>
+                        農場
+                      </label>
+                      <input
+                        type='text'
+                        className='form-control'
+                        id='farm'
+                        name='farm'
+                        value={tempProduct.farm || ""}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className='row'>
+                    <div className='mb-3 col-md-4'>
                       <label htmlFor='category' className='form-label'>
                         分類
                       </label>
@@ -90,7 +119,21 @@ const ProductModal = ({
                         required
                       />
                     </div>
-                    <div className='mb-3 col-md-6'>
+                    <div className='mb-3 col-md-4'>
+                      <label htmlFor='weight' className='form-label'>
+                        重量
+                      </label>
+                      <input
+                        type='number'
+                        className='form-control'
+                        id='weight'
+                        name='weight'
+                        value={tempProduct.weight || ""}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                    <div className='mb-3 col-md-4'>
                       <label htmlFor='unit' className='form-label'>
                         單位
                       </label>
@@ -151,15 +194,15 @@ const ProductModal = ({
                     ></textarea>
                   </div>
                   <div className='mb-3'>
-                    <label htmlFor='content' className='form-label'>
-                      說明內容
+                    <label htmlFor='origin_info' className='form-label'>
+                      產地資訊
                     </label>
                     <textarea
                       className='form-control'
-                      id='content'
-                      name='content'
+                      id='origin_info'
+                      name='origin_info'
                       rows='3'
-                      value={tempProduct.content}
+                      value={tempProduct.origin_info}
                       onChange={handleInputChange}
                     ></textarea>
                   </div>
@@ -179,7 +222,7 @@ const ProductModal = ({
                     </div>
                   </div>
                 </div>
-                <div className='col-md-4'>
+                <div className='col-md-6'>
                   <div className='mb-3'>
                     <label htmlFor='imageUrl' className='form-label'>
                       主要圖片網址
@@ -189,7 +232,7 @@ const ProductModal = ({
                       className='form-control'
                       id='imageUrl'
                       name='imageUrl'
-                      value={tempProduct.imageUrl || []}
+                      value={tempProduct.imageUrl || ""}
                       onChange={handleInputChange}
                     />
                     {/* 移除圖片預覽 */}
@@ -207,6 +250,42 @@ const ProductModal = ({
                       onChange={handleImageChange}
                     ></textarea>
                     {/* 移除多圖預覽 */}
+                  </div>
+                  <div className='mb-3'>
+                    <h6 className='mb-3 border-top pt-2'>保存資訊</h6>
+                    <label htmlFor='storage_method' className='form-label'>
+                      保存方式
+                    </label>
+                    <textarea
+                      className='form-control'
+                      id='storage_method'
+                      name='storage_method'
+                      rows='2'
+                      value={tempProduct.storage_method}
+                      onChange={handleInputChange}
+                    ></textarea>
+                    <label htmlFor='shelf_life' className='form-label'>
+                      保存期限
+                    </label>
+                    <input
+                      type='text'
+                      className='form-control'
+                      id='shelf_life'
+                      name='shelf_life'
+                      value={tempProduct.shelf_life || ""}
+                      onChange={handleInputChange}
+                    ></input>
+                    <label htmlFor='eating_tips' className='form-label'>
+                      食用技巧
+                    </label>
+                    <textarea
+                      className='form-control'
+                      id='eating_tips'
+                      name='eating_tips'
+                      rows={3}
+                      value={tempProduct.eating_tips || ""}
+                      onChange={handleInputChange}
+                    ></textarea>
                   </div>
                 </div>
               </div>
