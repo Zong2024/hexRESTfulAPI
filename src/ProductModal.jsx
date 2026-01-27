@@ -14,7 +14,9 @@ const ProductModal = ({
   const bsModal = useRef(null)
 
   useEffect(() => {
-    bsModal.current = new Modal(modalRef.current)
+    if (modalRef.current) {
+      bsModal.current = new Modal(modalRef.current)
+    }
 
     return () => {
       if (bsModal.current) {
@@ -48,7 +50,7 @@ const ProductModal = ({
         <div className='modal-content'>
           <div className='modal-header'>
             <h5 className='modal-title' id='addProductModalLabel'>
-              新增產品
+              {modalType === "create" ? "新增產品" : "編輯產品"}
             </h5>
             <button
               type='button'
@@ -85,7 +87,7 @@ const ProductModal = ({
                         className='form-control'
                         id='origin'
                         name='origin'
-                        value={tempProduct.origin || []}
+                        value={tempProduct.origin || ""}
                         onChange={handleInputChange}
                       />
                     </div>
@@ -213,7 +215,7 @@ const ProductModal = ({
                         type='checkbox'
                         id='is_enabled'
                         name='is_enabled'
-                        checked={tempProduct.is_enabled}
+                        checked={!!tempProduct.is_enabled}
                         onChange={handleInputChange}
                       />
                       <label className='form-check-label' htmlFor='is_enabled'>

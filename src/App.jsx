@@ -9,6 +9,7 @@ import {
   deleteProduct as apiDeleteProduct,
   editProduct as apiEditProduct,
 } from "./api"
+import Pagination from "./components/Pagination"
 
 const defaultData = {
   imageUrl: "",
@@ -40,7 +41,8 @@ const App = () => {
 
   const [isAuth, setIsAuth] = useState(false)
   const [products, setProducts] = useState([])
-  const [tempProduct, setTempProduct] = useState()
+  const [pagination, setPagination] = useState({})
+  const [tempProduct, setTempProduct] = useState(defaultData)
   const [originalTempProduct, setOriginalTempProduct] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [modalType, setModalType] = useState("create")
@@ -84,12 +86,6 @@ const App = () => {
     checkSignin()
   }, [])
 
-  useEffect(() => {
-    if (isAuth) {
-      fetchProducts()
-    }
-  }, [isAuth])
-
   const signin = async () => {
     try {
       await apiSignin(formData)
@@ -109,11 +105,12 @@ const App = () => {
     }
   }
   //api
-  const fetchProducts = async () => {
+  const fetchProducts = async (page = 1) => {
     setIsFetchingProducts(true)
     try {
-      const data = await getProducts()
-      setProducts(data)
+      const data = await getProducts(page)
+      setProducts(data.products)
+      setPagination(data.pagination)
       console.log(data)
     } catch (error) {
       console.error("商品取得錯誤", error)
@@ -121,6 +118,12 @@ const App = () => {
       setIsFetchingProducts(false)
     }
   }
+  useEffect(() => {
+    if (isAuth) {
+      fetchProducts()
+    }
+  }, [isAuth])
+
   const addProduct = async product => {
     return await apiAddProduct(product)
   }
@@ -164,7 +167,7 @@ const App = () => {
     const { value } = e.target
     setTempProduct(prev => ({
       ...prev,
-      imagesUrl: value.split("\n"),
+      imagesUrl: value.split("\n").filter(url => url.trim() !== ""),
     }))
   }
 
@@ -184,7 +187,7 @@ const App = () => {
       content: JSON.stringify(detailedInfo),
       origin_price: Number(tempProduct.origin_price),
       price: Number(tempProduct.price),
-      imagesUrl: tempProduct.imagesUrl.filter(url => url.trim() !== ""),
+      imagesUrl: (tempProduct.imagesUrl || []).filter(url => url.trim() !== ""),
     }
     try {
       if (modalType === "create") {
@@ -217,8 +220,13 @@ const App = () => {
       console.error(error.response?.data || error.message)
       alert("刪除產品失敗")
     } finally {
-      setTempProduct()
+      setTempProduct(defaultData)
     }
+  }
+
+  const handlePageChange = page => {
+    setPagination(prev => ({ ...prev, current_page: page }))
+    fetchProducts(page)
   }
 
   if (isLoading) {
@@ -233,7 +241,7 @@ const App = () => {
             signout
           </button>
           <div className='row mt-5'>
-            <div className='col-md-6'>
+            <div className='col-lg-6'>
               <h2 className='d-inline-block me-3'>產品列表</h2>
               <button
                 type='button'
@@ -250,7 +258,7 @@ const App = () => {
                     <th>售價</th>
                     <th>是否啟用</th>
                     <th>查看細節</th>
-                    <th>刪除</th>
+                    <th>功能</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -284,13 +292,20 @@ const App = () => {
                             查看細節
                           </button>
                         </td>
-                        <td>
+                        <td className='d-flex'>
                           <button
                             type='button'
-                            className='btn btn-danger'
+                            className='btn btn-outline-danger'
                             onClick={() => handleDeleteProduct(product.id)}
                           >
                             刪除
+                          </button>
+                          <button
+                            type='button'
+                            className='btn btn-outline-success '
+                            onClick={() => openModal("edit", product)}
+                          >
+                            edit
                           </button>
                         </td>
                       </tr>
@@ -302,24 +317,22 @@ const App = () => {
                   )}
                 </tbody>
               </table>
+              <Pagination
+                totalPages={pagination.total_pages}
+                currentPage={pagination.current_page}
+                onPageChange={handlePageChange}
+              />
             </div>
             <div className='col-md-6'>
               <h2 className='text-center'>單一產品細節</h2>
               {tempProduct.id ? (
-                <div className='card mb-3 p-4 position-relative'>
+                <div className='card mb-3 p-4 '>
                   <img
                     src={tempProduct.imageUrl || null}
                     className='card-img-top primary-image'
                     alt='主圖'
                   />
 
-                  <button
-                    type='button'
-                    className='position-absolute top-0 end-0 btn btn-primary '
-                    onClick={() => openModal("edit", tempProduct)}
-                  >
-                    edit
-                  </button>
                   <div className='card-body'>
                     <h5 className='card-title'>{tempProduct.title}</h5>
 
@@ -386,6 +399,7 @@ const App = () => {
             handleInputChange={handleModalInputChange}
             handleImageChange={handleImageChange}
             submitFunction={handleModalSubmit}
+            modalType={modalType}
           />
         </div>
       ) : (

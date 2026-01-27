@@ -41,9 +41,9 @@ export const signout = async () => {
   return response.data
 }
 
-export const getProducts = async () => {
-  const response = await api.get(`/api/${API_PATH}/admin/products`)
-  return response.data.products
+export const getProducts = async page => {
+  const response = await api.get(`/api/${API_PATH}/admin/products?page=${page}`)
+  return response.data
 }
 
 export const addProduct = async productData => {
