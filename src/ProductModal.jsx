@@ -9,6 +9,7 @@ const ProductModal = ({
   handleImageChange,
   submitFunction,
   modalType,
+  onFileUpload,
 }) => {
   const modalRef = useRef(null)
   const bsModal = useRef(null)
@@ -226,6 +227,17 @@ const ProductModal = ({
                 </div>
                 <div className='col-md-6'>
                   <div className='mb-3'>
+                    <label htmlFor='uploadImage' className='form-label'>
+                      上傳圖片
+                    </label>
+                    <input
+                      type='file'
+                      className='form-control'
+                      id='uploadImage'
+                      name='uploadImage'
+                      accept='.jpg,.png'
+                      onChange={e => onFileUpload(e)}
+                    />
                     <label htmlFor='imageUrl' className='form-label'>
                       主要圖片網址
                     </label>
@@ -237,7 +249,6 @@ const ProductModal = ({
                       value={tempProduct.imageUrl || ""}
                       onChange={handleInputChange}
                     />
-                    {/* 移除圖片預覽 */}
                   </div>
                   <div className='mb-3'>
                     <label htmlFor='imagesUrl' className='form-label'>

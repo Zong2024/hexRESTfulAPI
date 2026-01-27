@@ -64,3 +64,14 @@ export const editProduct = async (id, productData) => {
   })
   return response.data
 }
+
+export const postUploadImage = async file => {
+  try {
+    const formData = new FormData()
+    formData.append("file", file)
+    const response = await api.post(`/api/${API_PATH}/admin/upload`, formData)
+    return response.data.imageUrl
+  } catch (error) {
+    console.error("Upload error:", error)
+  }
+}

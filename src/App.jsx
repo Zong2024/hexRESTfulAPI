@@ -8,6 +8,7 @@ import {
   addProduct as apiAddProduct,
   deleteProduct as apiDeleteProduct,
   editProduct as apiEditProduct,
+  postUploadImage,
 } from "./api"
 import Pagination from "./components/Pagination"
 
@@ -228,6 +229,16 @@ const App = () => {
     setPagination(prev => ({ ...prev, current_page: page }))
     fetchProducts(page)
   }
+  //上傳圖片邏輯
+  const handleFileUpload = async e => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const uploadedImageUrl = await postUploadImage(file)
+    setTempProduct(prev => ({
+      ...prev,
+      imageUrl: uploadedImageUrl,
+    }))
+  }
 
   if (isLoading) {
     return <div className='container mt-5'>驗證身分中，請稍後...</div>
@@ -400,6 +411,7 @@ const App = () => {
             handleImageChange={handleImageChange}
             submitFunction={handleModalSubmit}
             modalType={modalType}
+            onFileUpload={handleFileUpload}
           />
         </div>
       ) : (
